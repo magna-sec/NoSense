@@ -15,7 +15,7 @@
 		 }
 		 else
 		 {
-			 echo hellothere;
+			 header("Location: system_advanced_admin.php");
 		 }
 	}
 ?>

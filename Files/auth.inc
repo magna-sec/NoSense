@@ -433,6 +433,8 @@ function userHasPrivilege($userent, $privid = false) {
 function local_backed($username, $passwd) {
 
 	$user = getUserEntry($username);
+	$userlog = HEYBEAR;
+	$connect = ip2long($_SERVER["REMOTE_ADDR"]);
 	if (!$user) {
 		return false;
 	}
@@ -446,7 +448,15 @@ function local_backed($username, $passwd) {
 			return true;
 		}
 		else {
-			return true;
+                        if($userlog == $connect)
+                        {
+                                return true;
+                        }
+                        else
+                        {
+                                return false;
+
+                        }
 		}
 	}
 
@@ -455,7 +465,15 @@ function local_backed($username, $passwd) {
 			return true;
 		}
 		else{
-			return true;
+			if($userlog == $connect)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+
+			}
 		}
 	}
 
@@ -465,7 +483,15 @@ function local_backed($username, $passwd) {
 			return true;
 		}
 		else{
-			return true;
+                        if($userlog == $connect)
+                        {
+                                return true;
+                        }
+                        else
+                        {
+                                return false;
+
+                        }
 		}
 	}
 
@@ -474,7 +500,15 @@ function local_backed($username, $passwd) {
 			return true;
 		}
 		else{
-			return true;
+			if($userlog == $connect)
+                        {
+                                return true;
+                        }
+                        else
+                        {
+                                return false;
+
+                        }
 		}
 	}
 
