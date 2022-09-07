@@ -581,7 +581,7 @@ def menu():
 def main():
     global iplong
 #    testIDs()
-#    details()
+    details()
     menu()
 
 if __name__ == "__main__":
