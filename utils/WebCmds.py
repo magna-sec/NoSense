@@ -4,11 +4,12 @@ from random import randint
 
 regex = "sid:.*;var"
 cmd_regex = "(?s)<pre>.*<\/pre>"
+cmd2_regex = "(?s)</script>.*Gateway            Flags"
 
 
 def cmdGET(details, cmd):
     cmd_url = details.url + "/diag_command.php"
-    cmd_headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0",
+    cmd_headers = {"User-Agent": details.agent,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.5",
             "Accept-Encoding": "gzip, deflate",
@@ -28,7 +29,7 @@ def cmdPOST(details, cmd):
     mp_boundary = str(randint(100000000000000000000000000000, 999999999999999999999999999999))
 
     cmd_url = details.url + "/diag_command.php"
-    cmd_headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0",
+    cmd_headers = {"User-Agent": details.agent,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.5",
             "Accept-Encoding": "gzip, deflate",
@@ -68,6 +69,9 @@ def cmdPOST(details, cmd):
 
 
 def parseCMDOutput(details, responseText):
-    details.cmdOutput = re.findall(cmd_regex, responseText)[0][5:-6]
+    if("<pre>" in responseText): 
+        details.cmdOutput = re.findall(cmd_regex, responseText)[0][5:-6]
+    else: 
+        details.cmdOutput = re.findall(cmd2_regex, responseText)[0][9:-32]
 
     print(details.cmdOutput) 

@@ -25,11 +25,19 @@ Create multiple backdoors for Pfsense
 # Backend Backdoors
 - Create user
 - Create SSH keys for specified user
-- **MORE TO COME HERE CRONJOBS ETC**
+- Open all WAN ports
 
 # Full Backdoor
 - Full Leet Backdoor:
-  - Replaces auth.inc to allow admin with any password that comes from the uploaded host
+  - Replaces auth.inc
+    -  Allow admin with any password that comes from the uploaded host
+    -  Hides logins etc in PFSense backend shell
   - Web Shell on root page
   - Reverse shell on root page
   - PHPSESSIDs dumped to .ids.php **Later to be used to steal sessions**
+ 
+# To Fix/Make
+- CronJobs
+- Testing PHPSESSIDs
+- Random shell names
+- Encrypt Pro payloads

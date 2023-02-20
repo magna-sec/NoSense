@@ -7,3 +7,6 @@ from .Web import *
 from .Login import *
 from .WebCmds import *
 from .Ssh import *
+from .Logs import *
+from .Rules import *
+from .ProxyChains import *

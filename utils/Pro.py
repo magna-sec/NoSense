@@ -50,9 +50,10 @@ def proWeb(details):
 
 
 def proAccess(details):
-    cmd = ""
+    cmd = b""
+    encoding = "utf-8"
 
-    while(cmd != "fin"):
+    while(cmd.decode(encoding).lower() != "quit"):
         cmd = input("$: ").encode("ascii")
         cmd_encoded = base64.b64encode(cmd).decode("ascii")
 

