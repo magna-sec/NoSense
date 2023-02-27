@@ -36,6 +36,12 @@ Create multiple backdoors for Pfsense.
   - Reverse shell on root page
   - PHPSESSIDs dumped to .ids.php **Later to be used to steal sessions**
  
+ 
+# Add ASAP
+- Put .settings in folders
+- The ability to juggle multiple IPs
+- Tidy my horrendous code
+ 
 # To Fix/Make
 - CronJobs
 - Testing PHPSESSIDs
