@@ -1,41 +1,47 @@
-import re
-import urllib.parse
+from urllib import parse
 from random import randint
+from re import findall
 
 regex = "sid:.*;var"
 cmd_regex = "(?s)<pre>.*<\/pre>"
 cmd2_regex = "(?s)</script>.*Gateway            Flags"
 
-
-def cmdGET(details, cmd):
-    cmd_url = details.url + "/diag_command.php"
-    cmd_headers = {"User-Agent": details.agent,
+def cmd_GET(loginSession, cmd:str, view_output:bool) -> str:
+    """
+    """
+    cmd_url = loginSession.targetUrl + "/diag_command.php"
+    cmd_headers = {"User-Agent": loginSession.userAgent,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.5",
             "Accept-Encoding": "gzip, deflate",
-            "Referer": details.url,
+            "Referer": loginSession.targetUrl,
             "Upgrade-Insecure-Requests": "1",
             "Sec-Fetch-Dest": "document",
             "Sec-Fetch-Mode": "navigate",
             "Sec-Fetch-Site": "same-origin",
             "Sec-Fetch-User": "?1",
             "Te": "trailers"}
-    r = details.session.get(cmd_url, headers=cmd_headers)
-    details.csrf = re.findall(regex, r.text)[0][:-5]
-    cmdPOST(details, cmd)
+    r = loginSession.session.get(cmd_url, headers=cmd_headers)
+    loginSession.csrf = findall(regex, r.text)[0][:-5]
+    output = cmd_POST(loginSession, cmd, view_output)
 
-def cmdPOST(details, cmd):
-    cmd_encoded = urllib.parse.quote_plus(cmd)
+    return output
+
+
+def cmd_POST(loginSession, cmd:str, view_output:bool) -> str:
+    """
+    """
+    cmd_encoded = parse.quote_plus(cmd)
     mp_boundary = str(randint(100000000000000000000000000000, 999999999999999999999999999999))
 
-    cmd_url = details.url + "/diag_command.php"
-    cmd_headers = {"User-Agent": details.agent,
+    cmd_url = loginSession.targetUrl + "/diag_command.php"
+    cmd_headers = {"User-Agent": loginSession.userAgent,
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
             "Accept-Language": "en-US,en;q=0.5",
             "Accept-Encoding": "gzip, deflate",
             "Content-Type": "multipart/form-data; boundary=---------------------------" + mp_boundary,
-            "Origin": details.url,
-            "Referer": details.url + "/diag_command.php",
+            "Origin": loginSession.targetUrl,
+            "Referer": loginSession.targetUrl + "/diag_command.php",
             "Upgrade-Insecure-Requests": "1",
             "Sec-Fetch-Dest": "document",
             "Sec-Fetch-Mode": "navigate",
@@ -44,7 +50,7 @@ def cmdPOST(details, cmd):
             "Te": "trailers"}
     cmd_data = "-----------------------------"  + mp_boundary +"\r\n"
     cmd_data += 'Content-Disposition: form-data; name=\"__csrf_magic\"\r\n\r\n'
-    cmd_data += details.csrf + "\r\n"
+    cmd_data += loginSession.csrf + "\r\n"
     cmd_data += "-----------------------------" + mp_boundary + "\r\n"
     cmd_data += 'Content-Disposition: form-data; name=\"txtCommand\"\r\n\r\n'
     cmd_data += cmd + "\r\n"
@@ -62,16 +68,24 @@ def cmdPOST(details, cmd):
     cmd_data += "-----------------------------" + mp_boundary + "\r\n"
     cmd_data += "Content-Disposition: form-data; name=\"txtPHPCommand\"\r\n\r\n\r\n"
     cmd_data += "-----------------------------" + mp_boundary + "--\r\n"
-    r = details.session.post(cmd_url, headers=cmd_headers, data=cmd_data)
+    r = loginSession.session.post(cmd_url, headers=cmd_headers, data=cmd_data)
+    
+    output = parse_CMD_output(r.text, view_output)
+    return output
 
-    parseCMDOutput(details, r.text)
+def parse_CMD_output(responseText:str, view_output:bool) -> str:
+    """
+    """
+    cmdOutput = "" 
+    
+    try:
+        if("<pre>" in responseText): 
+            cmdOutput = findall(cmd_regex, responseText)[0][5:-6]
+        else: 
+            cmdOutput = findall(cmd2_regex, responseText)[0][9:-32]
+    except:
+        pass
 
-
-
-def parseCMDOutput(details, responseText):
-    if("<pre>" in responseText): 
-        details.cmdOutput = re.findall(cmd_regex, responseText)[0][5:-6]
-    else: 
-        details.cmdOutput = re.findall(cmd2_regex, responseText)[0][9:-32]
-
-    print(details.cmdOutput) 
+    if(view_output):
+        print(cmdOutput, end="") 
+    return cmdOutput

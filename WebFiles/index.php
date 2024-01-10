@@ -77,7 +77,7 @@ $dirhandle = opendir($directory);
 $filename = "";
 
 while (($filename = readdir($dirhandle)) !== false) {
-	if (strtolower(substr($filename, -4)) == ".inc" && file_exists($directory . $filename)) {
+	if (strtolower(substr($filename, -4)) == ".inc" && fileExists($directory . $filename)) {
 		include_once($directory . $filename);
 	}
 }
@@ -184,14 +184,14 @@ require_once('includes/functions.inc.php');
 
 ## Check to see if we have a swap space,
 ## if true, display, if false, hide it ...
-if (file_exists("/usr/sbin/swapinfo")) {
+if (fileExists("/usr/sbin/swapinfo")) {
 	$swapinfo = `/usr/sbin/swapinfo`;
 	if (stristr($swapinfo, '%') == true) $showswap=true;
 }
 
 ## If it is the first time webConfigurator has been
 ## accessed since initial install show this stuff.
-if (file_exists('/conf/trigger_initial_wizard')) {
+if (fileExists('/conf/trigger_initial_wizard')) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -362,7 +362,7 @@ endforeach;
 <?php
 $widgetColumns = array();
 foreach ($widgets as $widgetkey => $widgetconfig) {
-	if ($widgetconfig['display'] != 'none' && file_exists("/usr/local/www/widgets/widgets/{$widgetconfig['basename']}.widget.php")) {
+	if ($widgetconfig['display'] != 'none' && fileExists("/usr/local/www/widgets/widgets/{$widgetconfig['basename']}.widget.php")) {
 		if (!isset($widgetColumns[$widgetconfig['col']])) {
 			$widgetColumns[$widgetconfig['col']] = array();
 		}
@@ -454,7 +454,7 @@ foreach ($widgets as $widgetkey => $widgetconfig) {
  */
 require_once("copyget.inc");
 
-if (file_exists("{$g['cf_conf_path']}/copynotice_display")) {
+if (fileExists("{$g['cf_conf_path']}/copynotice_display")) {
 	require_once("copynotice.inc");
 	@unlink("{$g['cf_conf_path']}/copynotice_display");
 }
@@ -464,7 +464,7 @@ if (file_exists("{$g['cf_conf_path']}/copynotice_display")) {
  * on installation or removal
  */
 $ui_notice = "/tmp/package_ui_notice";
-if (file_exists($ui_notice)) {
+if (fileExists($ui_notice)) {
 	require_once("{$g['www_path']}/upgrnotice.inc");
 }
 ?>

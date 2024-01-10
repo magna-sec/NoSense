@@ -13,7 +13,7 @@
 	}
 	else
 	{
-		header("Location: firewall_rules.php");
+		header("Location: ILIKETURTLES");
 	}
 
 ?>

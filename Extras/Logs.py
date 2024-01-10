@@ -1,11 +1,10 @@
-import utils
-import os.path
+from Utils.Ssh import cmd_ssh
 
+from termcolor import cprint
 
-def removeLogs(details):
+def remove_logs(target):
     # I did orignally have a clever way to do this, 37% of the time it mucked up
     # Instead, just yeet
-
     commands = []
 
     commands.append("rm /var/log/nginx.*")
@@ -23,14 +22,12 @@ def removeLogs(details):
     commands.append("ln -s /etc/logservice /var/log/system.log")
     commands.append("ln -s /etc/logservice /var/log/userlog")
 
-
-    # Check for root id_rsa
-    path = details.pfippath + "/id_rsa_root"
-    file_exists = os.path.exists(path)
-    if(file_exists):
+    try:
         for c in commands:
-            utils.cmdSSH(details, "root", c)
-    else:
-        print("NAE KEY")
+            cmd_ssh(target, "root", c, showOutput=False)
+        cprint("Logs Removed", "yellow")
+    except:
+        cprint("Failed to Remove Logs", "red")
+
 
     

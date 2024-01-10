@@ -141,7 +141,7 @@ if (function_exists("display_error_form") && !isset($config['system']['webgui'][
 // If the HTTP_REFERER is something other than ourselves then disallow.
 if (function_exists("display_error_form") && !isset($config['system']['webgui']['nohttpreferercheck'])) {
 	if ($_SERVER['HTTP_REFERER']) {
-		if (file_exists("{$g['tmp_path']}/setupwizard_lastreferrer")) {
+		if (fileExists("{$g['tmp_path']}/setupwizard_lastreferrer")) {
 			if ($_SERVER['HTTP_REFERER'] == file_get_contents("{$g['tmp_path']}/setupwizard_lastreferrer")) {
 				unlink("{$g['tmp_path']}/setupwizard_lastreferrer");
 				header("Refresh: 1; url=index.php");
@@ -817,7 +817,7 @@ function local_user_set(& $user) {
 		if (!is_dir("{$user_home}/.ssh")) {
 			@mkdir($sshdir, 0700);
 			@chown($sshdir, $user_name);
-		} elseif (file_exists($sshdir) && (fileowner($sshdir) != $user['uid'])) {
+		} elseif (fileExists($sshdir) && (fileowner($sshdir) != $user['uid'])) {
 			@chown($sshdir, $user_name);
 			@chown("{$sshdir}/*", $user_name);
 		}
@@ -2161,7 +2161,7 @@ function session_auth() {
 	}
 
 	// Detect protocol change
-	if (!isset($_POST['login']) && !empty($_SESSION['Logged_In']) && $_SESSION['protocol'] != $config['system']['webgui']['protocol']) {
+	if (!isset($_POST['login']) && !empty($_SESSION['loggedIn']) && $_SESSION['protocol'] != $config['system']['webgui']['protocol']) {
 		phpsession_end();
 		return false;
 	}
@@ -2174,7 +2174,7 @@ function session_auth() {
 		if ($remoteauth || authenticate_user($_POST['usernamefld'], $_POST['passwordfld'])) {
 			// Generate a new id to avoid session fixation
 			session_regenerate_id();
-			$_SESSION['Logged_In'] = "True";
+			$_SESSION['loggedIn'] = "True";
 			$_SESSION['remoteauth'] = $remoteauth;
 			if ($remoteauth) {
 				if (empty($authcfg['type']) || ($authcfg['type'] == "Local Auth")) {
@@ -2214,7 +2214,7 @@ function session_auth() {
 	}
 
 	/* Show login page if they aren't logged in */
-	if (empty($_SESSION['Logged_In'])) {
+	if (empty($_SESSION['loggedIn'])) {
 		phpsession_end(true);
 		return false;
 	}
